@@ -1,7 +1,7 @@
 # This Python file uses the following encoding: utf-8
 """
 contact: software@cbica.upenn.edu
-Copyright (c) 2018 University of Pennsylvania. All rights reserved.
+Copyright (c) 2024 University of Pennsylvania. All rights reserved.
 Use of this source code is governed by license located in license file: https://github.com/CBICA/NiChart_Tissue_Segmentation/LICENSE
 """
 
@@ -145,33 +145,36 @@ def main():
         copy_and_rename_inputs(input_path, temp_input_dir)
 
         # Run the DLICV to get the masks
-        compute_volume(str(temp_input_dir), str(temp_output_dir), model_path, **kwargs)
-        dlicv_mask_dir = Path(output_path) / "DLICV_mask"
+        dlicv_mask_dir = Path(temp_output_dir) / "DLICV_mask"
         dlicv_mask_dir.mkdir(exist_ok=True)
+        compute_volume(str(temp_input_dir), str(dlicv_mask_dir), model_path, **kwargs)
 
         # Apply the DLICV mask to get the Brain volume image
-        brain_volume_dir = Path(output_path) / "Brain_volume"
+        brain_volume_dir = Path(temp_output_dir) / "Brain_volume"
         brain_volume_dir.mkdir(exist_ok=True)
         for input_file in temp_input_dir.glob('*.nii.gz'):
-            mask_file_name = input_file.name
+            mask_file_name = input_file.name.replace('_0000','') # temp input dir has names for nNUnet, with _0000 suffixes.
             mask_file = dlicv_mask_dir / mask_file_name
             if mask_file.exists():
                 output_file = brain_volume_dir / mask_file_name
                 apply_mask_to_image(input_file, mask_file, output_file)
 
         # Perform tissue segmentation:
+        segmentation = Path(temp_output_dir) / "Segmentation"
+        segmentation.mkdir(exist_ok=True)
         for masked_volume in brain_volume_dir.glob('*.nii.gz'):
-            perform_tissue_segmentation(masked_volume, temp_output_dir)
+            perform_tissue_segmentation(masked_volume, segmentation / masked_volume.name.replace(".nii.gz",""))
 
         # Move the output files:
-        for file in temp_output_dir.iterdir():
-            if file.suffixes == ['.nii', '.gz']:
-                shutil.move(str(file), dlicv_mask_dir)
+        for file in segmentation.iterdir():
+            if file.suffixes == ['.nii', '.gz'] and "_seg" in file.name:
+                destination = Path(output_path) / file.name
+                shutil.move(str(file), destination)
 
         print()
         print()
         print()
-        print(f"Prediction complete. Results saved to {output_path}")
+        print(f"Segmentation complete. Results saved to {output_path}")
 
 
 if __name__ == '__main__':

@@ -1,30 +1,29 @@
-FROM pytorch/pytorch:2.0.1-cuda11.7-cudnn8-runtime
+# Use aidinisg/dlicv:0.0.0 as the base image
+FROM aidinisg/dlicv:0.0.0
 
-LABEL IMAGE="NiChart_Tissue_Segmentation"
-LABEL VERSION="0.1.7"
-LABEL CI_IGNORE="True"
+ 
 
+# Install dependencies and FSL using Neurodebian
+# First, add the Neurodebian repository
+RUN apt-get update && apt-get install -y software-properties-common gnupg && wget -O- http://neuro.debian.net/lists/focal.us-nh.full | tee /etc/apt/sources.list.d/neurodebian.sources.list && wget -qO - http://neuro.debian.net/_static/neuro.debian.net.asc | apt-key add -
+ 
+
+# Update apt-get and install FSL
 RUN apt-get update && \
-    apt-get -y install gcc \
-    mono-mcs \
-    gnupg2 \
-    git \
-    htop \
-    zip \
-    unzip \
-    g++ && \ 
-    apt-key del 3bf863cc && \ 
-    apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/3bf863cc.pub && \ 
-    rm -rf /var/lib/apt/lists/* && \
-    pip install --upgrade pip && \ 
-    pip install Cmake
+    apt-get install -y fsl-complete && \
+    apt-get install -y --no-install-recommends unzip && \
+    mkdir /NiChart_Tissue_Segmentation/ && \
+    cd /NiChart_Tissue_Segmentation/ && \
+    git clone https://github.com/georgeaidinis/NiChart_Tissue_Segmentation/
 
-# RUN mkdir /NiChart_Tissue_Segmentation 
-# COPY ./ /NiChart_Tissue_Segmentation/
-# RUN cd /NiChart_Tissue_Segmentation && pip install .
+RUN mkdir /NiChart_Tissue_Segmentation/model
+COPY ./temp/model/* /NiChart_Tissue_Segmentation/model/
 
-RUN cd / && \
-    git clone https://github.com/CBICA/NiChart_Tissue_Segmentation && \
-    cd /NiChart_Tissue_Segmentation && pip install . 
+# ADD https://github.com/CBICA/DLICV/releases/download/v0.0.0/model.zip /NiChart_Tissue_Segmentation/
+# RUN unzip /NiChart_Tissue_Segmentation/model.zip /NiChart_Tissue_Segmentation/ && \
+#     rm -rf /NiChart_Tissue_Segmentation/model.zip && \
+#     echo "FSL installation:" && which fsl
 
-CMD ["NiChart_Tissue_Segmentation" ]
+# Set the default command or entrypoint (optional, depending on your package needs)
+ENTRYPOINT ["NiChart_Tissue_Segmentation", "--model", "/NiChart_Tissue_Segmentation/model/"]
+CMD ["--help"]
