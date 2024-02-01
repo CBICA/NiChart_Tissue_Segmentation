@@ -11,9 +11,9 @@ import tempfile
 import shutil
 from pathlib import Path
 import pkg_resources  # part of setuptools
-from NiChart_Tissue_Segmentation.Segmentation import compute_volume
+from DLICV.compute_icv import compute_volume
 
-VERSION = pkg_resources.require("NiChart_DLMUSE")[0].version
+VERSION = pkg_resources.require("NiChart_Tissue_Segmentation")[0].version
 
 def validate_path(parser, arg):
     """Ensure the provided path exists."""
@@ -50,8 +50,11 @@ def main():
         [OUTPUT]        The filepath of the directory where the output will be
         [-o, --output]  saved.
     
-        [MODEL]        The filepath of the nNUnet model to be used for ICV 
-        [-m, --model]  extraction.
+        [MODEL]         The filepath of the nNUnet model to be used for ICV 
+        [-m, --model]   extraction.
+
+        [KWARGS]        The keyword arguments for the nNUnet model arch. Please
+        [-k, --kwargs]  visit the DLICV package for more documentation.
     
         
         [-h, --help]    Show this help message and exit.
@@ -87,7 +90,19 @@ def main():
                         help='Output file name with extension.', 
                         default=None, required=True)
     
-    parser.add_argument("-m","--model", required=True, type=lambda x: validate_path(parser, x), help="Model path.")
+    # MODEL argument
+    parser.add_argument("-m",
+                        "--model", 
+                        type=lambda x: validate_path(parser, x), 
+                        help="Model path.",
+                        default=None, required=True)
+    
+    # KWARGS
+    parser.add_argument("-k",
+                        "--kwargs", 
+                        nargs=argparse.REMAINDER, 
+                        help="Additional keyword arguments to pass to compute_icv.py",
+                        default=None, required=False)
     
     # VERSION argument
     help = "Show the version and exit"
@@ -109,6 +124,17 @@ def main():
 
     input_path = args.input_path
     output_path = args.output_path
+    model_path = args.model_path
+    kwargs = {}
+    if args.kwargs:
+        for kwarg in args.kwargs:
+            key, value = kwarg.split('=', 1)
+            kwargs[key] = value
+    
+    print()
+    print("Arguments:")
+    print(args)
+    print()
 
     # Create cross-platform temp dir, and child dirs that nnUNet needs
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -134,11 +160,6 @@ def main():
         print()
         print()
         print(f"Prediction complete. Results saved to {output_path}")
-    
-    print()
-    print("Arguments:")
-    print(args)
-    print()
 
 
 if __name__ == '__main__':

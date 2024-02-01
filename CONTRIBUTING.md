@@ -1,4 +1,4 @@
-# Contributing to DLMUSE
+# Contributing to NiChart_Tissue_Segmentation
 
 We love your input! We want to make contributing to this project as easy and transparent as possible, whether it's:
 
@@ -27,9 +27,9 @@ Please follow these steps to have your contribution considered by the maintainer
 
 In short, when you submit code changes, your submissions are understood to be under the same [License](LICENSE) that covers the project. Feel free to contact the maintainers if that's a concern.
 
-## Report bugs using Github's [issues](https://github.com/CBICA/DLMUSE/issues)
+## Report bugs using Github's [issues](https://github.com/CBICA/NiChart_Tissue_Segmentation/issues)
 
-We use GitHub issues to track public bugs. Report a bug by [opening a new issue](https://github.com/CBICA/DLMUSE/issues/new); it's that easy!
+We use GitHub issues to track public bugs. Report a bug by [opening a new issue](https://github.com/CBICA/NiChart_Tissue_Segmentation/issues/new); it's that easy!
 
 ## Write bug reports with detail, background, and sample code
 

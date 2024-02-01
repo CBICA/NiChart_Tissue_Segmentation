@@ -16,21 +16,21 @@ Given an input (sMRI) scan, NiChart_Tissue_Segmentation extracts the following:
 
 This package uses [nnUNet](https://github.com/MIC-DKFZ/nnUNet/tree/nnunetv1) (version 1) as a basis model architecture for the deep learning parts, [nipype](https://nipy.org/packages/nipype/index.html) for the workflow management and various other [libraries](requirements.txt).
 
-It is available both as an installable package, as well as a [docker container](https://hub.docker.com/repository/docker/aidinisg/nichart_dlmuse/general). Please see [Installation](#installation) and [Usage](#usage) for more information on how to use it.
+It is available both as an installable package, as well as a [docker container](https://hub.docker.com/repository/docker/aidinisg/nichart_tissue_segmentation/general). Please see [Installation](#installation) and [Usage](#usage) for more information on how to use it.
 
 ## Installation
 
 1. Create a new conda env
 
     ```bash
-    conda create --name NCTissueSegmentation python=3.8
-    conda activate NCTissueSegmentation
+    conda create --name NCTS python=3.8
+    conda activate NCTS
     ```
 
     In one command:
 
     ```bash
-    conda create --name NCTissueSegmentation -y python=3.8 && conda activate NCTissueSegmentation
+    conda create --name NCTS -y python=3.8 && conda activate NCTS
     ```
 
 2. Clone and install NiChart_Tissue_Segmentation
@@ -68,7 +68,7 @@ singularity build nichart_tissue_segmentation.sif singularity.def
 ```
 
 This will take some time, but will build a containerized version of your current repo. Be aware that this includes any local changes!
-The nichart_dlmuse.sif file can be distributed via direct download, or pushed to a container registry that accepts SIF images.
+The nichart_tissue_segmentation.sif file can be distributed via direct download, or pushed to a container registry that accepts SIF images.
 
 ## Usage
 Pre-trained nnUNet models for the skull-stripping and segmentation tasks can be found in the [NiChart_Tissue_Segmentation - 0.0.0](https://github.com/CBICA/NiChart_Tissue_Segmentation/releases/tag/0.0.0) release as an [artifact](https://github.com/CBICA/NiChart_Tissue_Segmentation/releases/download/0.0.0/nnUNet_model.zip). Feel free to use it under the package's [license](LICENSE).
