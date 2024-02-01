@@ -149,10 +149,12 @@ def main():
             **kwargs
         )
 
-       # Move results to the specified output location, including only .nii.gz files
+        # Move results to the specified output location, including only .nii.gz files
+        dlicv_mask_dir = Path(output_path) / "DLICV_mask"
+        dlicv_mask_dir.mkdir(exist_ok=True)
         for file in temp_output_dir.iterdir():
             if file.suffixes == ['.nii', '.gz']:
-                shutil.move(str(file), output_path)
+                shutil.move(str(file), dlicv_mask_dir)
         print()
         print()
         print()
