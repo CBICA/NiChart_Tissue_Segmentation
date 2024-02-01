@@ -92,7 +92,8 @@ def main():
     
     # MODEL argument
     parser.add_argument("-m",
-                        "--model", 
+                        "--model_path",
+                        "--model",
                         type=lambda x: validate_path(parser, x), 
                         help="Model path.",
                         default=None, required=True)
@@ -121,20 +122,16 @@ def main():
     
         
     args = parser.parse_args()
-
+    
     input_path = args.input_path
     output_path = args.output_path
     model_path = args.model_path
     kwargs = {}
+    
     if args.kwargs:
         for kwarg in args.kwargs:
             key, value = kwarg.split('=', 1)
             kwargs[key] = value
-    
-    print()
-    print("Arguments:")
-    print(args)
-    print()
 
     # Create cross-platform temp dir, and child dirs that nnUNet needs
     with tempfile.TemporaryDirectory() as temp_dir:
