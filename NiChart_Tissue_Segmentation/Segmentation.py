@@ -152,13 +152,15 @@ def calc_roi_volumes(in_img_file, mrid, label_indices = []):
 def create_segmentation_csv(image_folder, out_csv):
 
     # Initiate an empty dataframe with the columns 'MRID', 'CSF','gray_matter','white_matter'
-    df = pd.DataFrame()
+    cols = ["MRID", "CSF", "Gray_Matter", "White_Matter"]
+    df = pd.DataFrame(columns=cols)
 
     for image in image_folder.glob('*.nii.gz'):
         if image.suffixes == ['.nii', '.gz'] and "_seg" in image.name:
             # The FAST segmentation tool uses 3 labels, 1 for CSF, 2 for GM, 3 for WM:
-            df = calc_roi_volumes(image, image.name.replace("_seg.nii.gz", ""), label_indices=[1,2,3])
+            image_df = calc_roi_volumes(image, image.name.replace("_seg.nii.gz", ""), label_indices=[1,2,3])
+            image_df.columns = cols
+            df = pd.concat([df, image_df], ignore_index=True)
 
     ## Write out csv
-    df.columns = ["MRID", "CSF", "Gray_Matter", "White_Matter"]
     df.to_csv(out_csv, index = False)
