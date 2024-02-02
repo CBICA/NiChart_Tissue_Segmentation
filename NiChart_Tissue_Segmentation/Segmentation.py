@@ -1,5 +1,5 @@
 import subprocess
-import os
+import pandas as pd
 import nibabel as nib
 from nibabel.orientations import axcodes2ornt, inv_ornt_aff, ornt_transform
 import numpy as np
@@ -107,3 +107,58 @@ def perform_tissue_segmentation(input_path, output_path):
     """Perform tissue segmentation using FSL's FAST."""
     fast_command = ["fast", "-o", str(output_path), str(input_path)]
     subprocess.run(fast_command)
+
+def calc_roi_volumes(in_img_file, mrid, label_indices = []):
+    '''Creates a dataframe with the volumes of rois.
+    Users should provide the mrid (to be added in MRID column) and 
+    the input roi image.
+    Users can optionally select a set of roi indices (default: all indices in the img)
+    '''
+    ## Keep input lists as arrays
+    label_indices = np.array(label_indices)
+    
+    ## Read image
+    nii = nib.load(in_img_file)
+    img_vec = nii.get_fdata().flatten().astype(int)
+
+    ## Get counts of unique indices (excluding 0)
+    img_vec = img_vec[img_vec != 0]
+    u_ind, u_cnt = np.unique(img_vec, return_counts=True)
+
+    ## Get label indices
+    if label_indices.shape[0] == 0:
+        label_indices = u_ind
+    
+    label_names = label_indices.astype(str)
+
+    ## Get voxel size
+    vox_size = np.prod(nii.header.get_zooms()[0:3])
+
+    ## Get volumes for all rois
+    tmp_cnt = np.zeros(np.max([label_indices.max(), u_ind.max()]) + 1)
+    tmp_cnt[u_ind] = u_cnt
+
+    ## Get volumes for selected rois
+    sel_cnt = tmp_cnt[label_indices]
+    sel_vol = (sel_cnt * vox_size).reshape(1,-1)
+    
+    ## Create dataframe
+    df_out = pd.DataFrame(index = [mrid], columns = label_names, data = sel_vol)
+    df_out = df_out.reset_index().rename({'index' : 'MRID'}, axis = 1)
+
+    ##Return output dataframe
+    return df_out
+
+def create_segmentation_csv(image_folder, out_csv):
+
+    # Initiate an empty dataframe with the columns 'MRID', 'CSF','gray_matter','white_matter'
+    df = pd.DataFrame()
+
+    for image in image_folder.glob('*.nii.gz'):
+        if image.suffixes == ['.nii', '.gz'] and "_seg" in image.name:
+            # The FAST segmentation tool uses 3 labels, 1 for CSF, 2 for GM, 3 for WM:
+            df = calc_roi_volumes(image, image.name.replace("_seg.nii.gz", ""), label_indices=[1,2,3])
+
+    ## Write out csv
+    df.columns = ["MRID", "CSF", "Gray_Matter", "White_Matter"]
+    df.to_csv(out_csv, index = False)

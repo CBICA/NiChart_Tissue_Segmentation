@@ -12,7 +12,7 @@ import shutil
 from pathlib import Path
 import pkg_resources  # part of setuptools
 from DLICV.compute_icv import compute_volume
-from NiChart_Tissue_Segmentation.Segmentation import apply_mask_to_image, perform_tissue_segmentation
+from NiChart_Tissue_Segmentation.Segmentation import apply_mask_to_image, perform_tissue_segmentation, create_segmentation_csv
 
 VERSION = pkg_resources.require("NiChart_Tissue_Segmentation")[0].version
 
@@ -44,23 +44,26 @@ def main():
     ICV calculation, tossie segmentation for structural MRI data.
 
     required arguments:
-        [INPUT]         The filepath of the directory containing the input. The 
-        [-i, --input]   input can be a single .nii.gz (or .nii) file or a  
-                        directory containing .nii.gz files (or .nii files). 
+        [INPUT]             The filepath of the directory containing the input. The 
+        [-i, --input]       input can be a single .nii.gz (or .nii) file or a  
+                            directory containing .nii.gz files (or .nii files). 
 
-        [OUTPUT]        The filepath of the directory where the output will be
-        [-o, --output]  saved.
-    
-        [MODEL]         The filepath of the nnUNet model to be used for ICV 
-        [-m, --model]   extraction.
+        [OUTPUT]            The filepath of the directory where the output will be
+        [-o, --output]      saved.
 
-        [KWARGS]        The keyword arguments for the nnUNet model arch. Please
-        [-k, --kwargs]  visit the DLICV package for more documentation.
-    
-        
-        [-h, --help]    Show this help message and exit.
-        
-        [-V, --version] Show program's version number and exit.
+        [MODEL]             The filepath of the nnUNet model to be used for ICV 
+        [-m, --model]       extraction.
+
+        [KWARGS]            The keyword arguments for the nnUNet model arch. Please
+        [-k, --kwargs]      visit the DLICV package for more documentation.
+
+        [CALCULATE_VOLUMES] If given, the volumes of segmented regions will be
+        [-c,                calculated and stored into a .csv file.
+        --calculate_volumes]
+
+        [-h, --help]        Show this help message and exit.
+
+        [-V, --version]     Show program's version number and exit.
 
         EXAMPLE USAGE:
         
@@ -99,6 +102,14 @@ def main():
                         help="Model path.",
                         default=None, required=True)
     
+    # CALCULATE_VOLUMES argument
+    parser.add_argument('-c', 
+                        '--calculate_volumes',
+                        type=str,
+                        default=None,
+                        required=False,
+                        help="If passed as flag, the volumes of segmented regions will be calculated and stored into a .csv")
+
     # KWARGS
     parser.add_argument("-k",
                         "--kwargs", 
@@ -107,19 +118,17 @@ def main():
                         default=None, required=False)
     
     # VERSION argument
-    help = "Show the version and exit"
     parser.add_argument("-V", 
                         "--version", 
                         action='version',
                         version=prog+ ": v{VERSION}.".format(VERSION=VERSION),
-                        help=help)
+                        help="Show the version and exit")
 
     # HELP argument
-    help = 'Show this message and exit'
     parser.add_argument('-h', 
                         '--help',
                         action='store_true', 
-                        help=help)
+                        help='Show this message and exit')
     
         
     args = parser.parse_args()
@@ -127,6 +136,7 @@ def main():
     input_path = args.input_path
     output_path = args.output_path
     model_path = args.model_path
+    calculate_volumes = args.calculate_volumes
     kwargs = {}
     
     if args.kwargs:
@@ -169,12 +179,19 @@ def main():
         for file in segmentation.iterdir():
             if file.suffixes == ['.nii', '.gz'] and "_seg" in file.name:
                 destination = Path(output_path) / file.name
-                shutil.move(str(file), destination)
-
+                shutil.copy(str(file), destination)
+        
         print()
         print()
         print()
         print(f"Segmentation complete. Results saved to {output_path}")
+        
+        # Calculate the segmented regions' volumes:
+        if calculate_volumes is not None:
+            create_segmentation_csv(segmentation, calculate_volumes)
+            print(f"Volumetric data saved at {calculate_volumes}")
+            
+
 
 
 if __name__ == '__main__':
