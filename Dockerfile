@@ -12,7 +12,7 @@ ENV PATH=$FSLDIR/bin:$PATH
 ENV FSLOUTPUTTYPE=NIFTI_GZ
 
 RUN cd / && \
-    git clone https://github.com/georgeaidinis/NiChart_Tissue_Segmentation && \
+    git clone https://github.com/CBICA/NiChart_Tissue_Segmentation && \
     cd NiChart_Tissue_Segmentation/ && \
     pip install . && \
     cp -r /DLICV/model /NiChart_Tissue_Segmentation/ 

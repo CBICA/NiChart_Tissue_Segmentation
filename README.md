@@ -6,15 +6,14 @@ Brain tissue segmentation using FSL FAST and DLICV
 
 NiChart_Tissue_Segmentation offers easy brain tissue segmantation.
 
-This is achieved through the [DLICV](https://github.com/CBICA/DLICV) and [FAST](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FAST) methods. Intermediate step results are saved for easy access to the user.
+This is achieved through the [DLICV](https://github.com/CBICA/DLICV) and [FAST](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FAST) methods.
 
 Given an input (sMRI) scan, NiChart_Tissue_Segmentation extracts the following:
 
-1. ICV mask
-2. ICV image
-3. Tissue segmentation
+1. Tissue segmentation
+2. Volumetric data (optional)
 
-This package uses [nnUNet](https://github.com/MIC-DKFZ/nnUNet/tree/nnunetv1) (version 1) as a basis model architecture for the deep learning parts, [nipype](https://nipy.org/packages/nipype/index.html) for the workflow management and various other [libraries](requirements.txt).
+This package uses [nnUNet](https://github.com/MIC-DKFZ/nnUNet/tree/nnunetv1) (version 1) as a basis model architecture for the deep learning parts, [FAST](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FAST) for the tissue segmentation and various other [libraries](requirements.txt).
 
 It is available both as an installable package, as well as a [docker container](https://hub.docker.com/repository/docker/aidinisg/nichart_tissue_segmentation/general). Please see [Installation](#installation) and [Usage](#usage) for more information on how to use it.
 
@@ -41,57 +40,39 @@ It is available both as an installable package, as well as a [docker container](
     pip install .
     ```
 
-3. Run NiChart_Tissue_Segmentation. Example usage below
+3. Download model from this package's release as an [artifact](https://github.com/CBICA/NiChart_Tissue_Segmentation/releases/download/0.0.0/nnUNet_model.zip)
 
-    ```bash
-    NiChart_Tissue_Segmentation --indir                     /path/to/input     \
-                                --outdir                    /path/to/output
-    ```
+4. Run NiChart_Tissue_Segmentation. Please see [Usage](#usage) for an example.
 
-## Docker/Singularity/Apptainer-based build and installation
+## Docker-based build
 
-The package comes already pre-built as a [docker container](https://hub.docker.com/repository/docker/aidinisg/nichart_tissue_segmentation/general), for convenience. Please see [Usage](#usage) for more information on how to use it. Alternatively, you can build the docker image locally, like so:
+The package comes already pre-built as a [docker container](https://hub.docker.com/repository/docker/aidinisg/nichart_tissue_segmentation/general), for convenience. Please see [Usage](#usage) for more information on how to use it. Alternatively, you can build the docker image locally using the dockerfile provided, like so:
 
 ```bash
 docker build -t nichart_tissue_segmentation .
 ```
 
-Singularity and Apptainer images can be built for NiChart_Tissue_Segmentation, allowing for frozen versions of the pipeline and easier installation for end-users.
-Note that the Singularity project recently underwent a rename to "Apptainer", with a commercial fork still existing under the name "Singularity" (confusing!).
-Please note that while for now these two versions are largely identical, future versions may diverge. It is recommended to use the AppTainer distribution. For now, these instructions apply to either.
-
-First install [the container engine](https://apptainer.org/admin-docs/3.8/installation.html).
-Then, from the cloned project repository, run:
-
-```bash
-singularity build nichart_tissue_segmentation.sif singularity.def
-```
-
-This will take some time, but will build a containerized version of your current repo. Be aware that this includes any local changes!
-The nichart_tissue_segmentation.sif file can be distributed via direct download, or pushed to a container registry that accepts SIF images.
-
 ## Usage
 
-Pre-trained nnUNet models for the skull-stripping and segmentation tasks can be found in the [NiChart_Tissue_Segmentation - 0.0.0](https://github.com/CBICA/NiChart_Tissue_Segmentation/releases/tag/0.0.0) release as an [artifact](https://github.com/CBICA/NiChart_Tissue_Segmentation/releases/download/0.0.0/nnUNet_model.zip). Feel free to use it under the package's [license](LICENSE).
-
-Due to the [nnunetv1](https://github.com/MIC-DKFZ/nnUNet/tree/nnunetv1) dependency, the package follows nnUNet's requirements for folder structure and naming conventions. It is recommended that you follow this guide's structure and logic, so that the issues arising from the requirements of the nnUNet dependency are minimized.
+Pre-trained nnUNet models for the skull-stripping task can be found in the [NiChart_Tissue_Segmentation - 0.0.0](https://github.com/CBICA/NiChart_Tissue_Segmentation/releases/tag/0.0.0) release as an [artifact](https://github.com/CBICA/NiChart_Tissue_Segmentation/releases/download/0.0.0/nnUNet_model.zip). Feel free to use it under the package's [license](LICENSE).
 
 The model provided as an artifact is already in the file structure that's needed for the package to work, so make sure to include it as downloaded.
-The `nnUNet_preprocessed`, `nnUNet_raw_database` directories are needed for the nnUNet library to store (if needed) temporary files. It is highly suggested that you keep these in the same directory as the model and the data, as to avoid any confusion with using the library. This will be fixed in upcoming releases.
 
-Therefore assuming the following folder structure:
+Given the following file structure:
 
 ```bash
 temp
+├── in                      // Input folder. Image names are irrelevant.
+│   ├── image1.nii.gz
+│   ├── image2.nii.gz
+│   └── image3.nii.gz
 ├── nnUNet_model            // As provided from the release
 │   └── nnUNet
-├── nnUNet_out              // Output destination
-├── nnUNet_preprocessed     // Empty
-└── nnUNet_raw_database     // Empty
-    └── nnUNet_raw_data     // Input folder. Image names are irrelevant.
-        ├── image1.nii.gz
-        ├── image2.nii.gz
-        └── image3.nii.gz
+└── out                     // Output destination
+    ├── image1_seg.nii.gz
+    ├── image2_seg.nii.gz
+    ├── image3_seg.nii.gz
+    └── output.csv
 ```
 
 ### As a locally installed package
@@ -99,9 +80,10 @@ temp
 A complete command would be (run from the directory of the package):
 
 ```bash
-NiChart_Tissue_Segmentation -i /path/to/input/ \
-                            -o /path/to/output/ \
-                            -m /path/to/model/
+NiChart_Tissue_Segmentation -i /temp/in/ \
+                            -o /temp/out/ \
+                            -m /temp/nnUNet_model \
+                            -c /temp/output.csv # Optional
 ```
 
 For further explanation please refer to the complete documentation:
@@ -117,3 +99,41 @@ An example command using the [docker container](https://hub.docker.com/repositor
 ```bash
 docker run -it --rm --gpus all -v ./:/workspace/ aidinisg/nichart_tissue_segmentation:0.0.0 NiChart_Tissue_Segmentation -i path/to/input -o path/to/output
 ```
+
+Please note that the model is provided in the docker container, but you can always substitute it with your own nnUNet model.
+
+### Example output
+
+```bash
+temp
+├── in              
+│   ├── image1.nii.gz
+│   ├── image2.nii.gz
+│   └── image3.nii.gz
+├── nnUNet_model    
+│   └── nnUNet
+└── out                     // Output destination
+    ├── image1_seg.nii.gz
+    ├── image2_seg.nii.gz
+    ├── image3_seg.nii.gz
+    └── output.csv
+
+```
+
+## Contact
+
+For more information, please contact [CBICA Software](mailto:software@cbica.upenn.edu).
+
+## For Developers
+
+Contributions are welcome! Please refer to our [CONTRIBUTING.md](CONTRIBUTING.md) for more information on how to report bugs, suggest enhancements, and contribute code.
+
+If you're a developer looking to contribute, you'll first need to set up a development environment. After cloning the repository, you can install the development dependencies with:
+
+```bash
+pip install -r requirements-test.txt
+```
+
+This will install the packages required for running tests and formatting code. Please make sure to write tests for new code and run them before submitting a pull request.
+
+© 2024 NiChart Team. All Rights Reserved.
