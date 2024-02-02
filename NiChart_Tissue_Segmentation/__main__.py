@@ -51,10 +51,10 @@ def main():
         [OUTPUT]        The filepath of the directory where the output will be
         [-o, --output]  saved.
     
-        [MODEL]         The filepath of the nNUnet model to be used for ICV 
+        [MODEL]         The filepath of the nnUNet model to be used for ICV 
         [-m, --model]   extraction.
 
-        [KWARGS]        The keyword arguments for the nNUnet model arch. Please
+        [KWARGS]        The keyword arguments for the nnUNet model arch. Please
         [-k, --kwargs]  visit the DLICV package for more documentation.
     
         
@@ -153,7 +153,7 @@ def main():
         brain_volume_dir = Path(temp_output_dir) / "Brain_volume"
         brain_volume_dir.mkdir(exist_ok=True)
         for input_file in temp_input_dir.glob('*.nii.gz'):
-            mask_file_name = input_file.name.replace('_0000','') # temp input dir has names for nNUnet, with _0000 suffixes.
+            mask_file_name = input_file.name.replace('_0000','') # temp input dir has names for nnUNet, with _0000 suffixes.
             mask_file = dlicv_mask_dir / mask_file_name
             if mask_file.exists():
                 output_file = brain_volume_dir / mask_file_name
